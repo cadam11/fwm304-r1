@@ -1,4 +1,12 @@
+// amplify/data/resource.ts
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { defineConversationHandlerFunction } from "@aws-amplify/backend-ai/conversation";
+
+export const conversationHandler = defineConversationHandlerFunction({
+  name: "resourceManagementTool",
+  entry: "./resourceManagementTool.ts",
+  models: [{ modelId: a.ai.model("Claude 3 Sonnet") }],
+});
 
 const schema = a.schema({
   Engineer: a
@@ -74,7 +82,27 @@ const schema = a.schema({
           modelOperation: "list",
         }),
       ],
-    }).authorization(m => m.owner())
+      handler: conversationHandler,
+    })
+    .authorization((allow) => allow.owner()),
+
+  ResourceAlert: a
+    .model({
+      type: a.enum(["CONFLICT", "OPPORTUNITY", "RISK"]),
+      message: a.string(),
+      severity: a.enum(["LOW", "MEDIUM", "HIGH"]),
+      relatedEngineers: a.string().array(),
+      relatedProjects: a.string().array(),
+    })
+    .authorization((allow) => allow.authenticated()),
+
+  generateAlerts: a
+    .generation({
+      aiModel: a.ai.model("Claude 3 Sonnet"),
+      systemPrompt:
+        "Generate resource management alerts based on current data.",
+    })
+    .returns(a.ref("ResourceAlert").array()),
 });
 
 export type Schema = ClientSchema<typeof schema>;
