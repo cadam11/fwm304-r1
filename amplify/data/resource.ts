@@ -1,17 +1,38 @@
-import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
+// amplify/data/resource.ts
+import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 
-/*== STEP 1 ===============================================================
-The section below creates a Todo database table with a "content" field. Try
-adding a new "isDone" field as a boolean. The authorization rule below
-specifies that any unauthenticated user can "create", "read", "update", 
-and "delete" any "Todo" records.
-=========================================================================*/
 const schema = a.schema({
-  Todo: a
+  Engineer: a
     .model({
-      content: a.string(),
+      name: a.string().required(),
+      skills: a.string().array(),
+      availability: a.boolean(),
+      currentProject: a.belongsTo("Project", "projectId"),
+      timeOff: a.hasMany("TimeOff", "engineerId"),
+      projectId: a.id(),
     })
-    .authorization((allow) => [allow.guest()]),
+    .authorization((allow) => allow.authenticated()),
+
+  Project: a
+    .model({
+      name: a.string().required(),
+      startDate: a.date().required(),
+      endDate: a.date().required(),
+      requiredSkills: a.string().array(),
+      engineers: a.hasMany("Engineer", "projectId"),
+      status: a.enum(["PLANNED", "IN_PROGRESS", "COMPLETED"]),
+    })
+    .authorization((allow) => allow.authenticated()),
+
+  TimeOff: a
+    .model({
+      engineerId: a.id(),
+      engineer: a.belongsTo("Engineer", "engineerId"),
+      startDate: a.date().required(),
+      endDate: a.date().required(),
+      type: a.enum(["VACATION", "SICK", "HOLIDAY"]),
+    })
+    .authorization((allow) => allow.authenticated()),
 });
 
 export type Schema = ClientSchema<typeof schema>;
@@ -19,35 +40,6 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: 'iam',
+    defaultAuthorizationMode: "userPool",
   },
 });
-
-/*== STEP 2 ===============================================================
-Go to your frontend source code. From your client-side code, generate a
-Data client to make CRUDL requests to your table. (THIS SNIPPET WILL ONLY
-WORK IN THE FRONTEND CODE FILE.)
-
-Using JavaScript or Next.js React Server Components, Middleware, Server 
-Actions or Pages Router? Review how to generate Data clients for those use
-cases: https://docs.amplify.aws/gen2/build-a-backend/data/connect-to-API/
-=========================================================================*/
-
-/*
-"use client"
-import { generateClient } from "aws-amplify/data";
-import type { Schema } from "@/amplify/data/resource";
-
-const client = generateClient<Schema>() // use this Data client for CRUDL requests
-*/
-
-/*== STEP 3 ===============================================================
-Fetch records from the database and use them in your frontend component.
-(THIS SNIPPET WILL ONLY WORK IN THE FRONTEND CODE FILE.)
-=========================================================================*/
-
-/* For example, in a React component, you can use this snippet in your
-  function's RETURN statement */
-// const { data: todos } = await client.models.Todo.list()
-
-// return <ul>{todos.map(todo => <li key={todo.id}>{todo.content}</li>)}</ul>
