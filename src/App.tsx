@@ -8,6 +8,8 @@ import {
   View,
 } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
+import { ResourceDashboard } from "./components/ResourceDashboard";
+import { AIPlanner } from "./components/AIPlanner";
 import { theme } from "./theme";
 
 function App() {
@@ -26,8 +28,12 @@ function App() {
             </Flex>
 
             <Flex direction="row" gap="1rem">
-              <View flex="2">&nbsp;</View>
-              <View flex="1">&nbsp;</View>
+              <View flex="2">
+                <ResourceDashboard />
+              </View>
+              <View flex="1">
+                <AIPlanner />
+              </View>
             </Flex>
           </View>
         )}
